@@ -1,12 +1,22 @@
 {
-  "name": "event-emitter",
+  "name": "mini-eventing",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib/mini-eventing.js",
+  "module": "lib/mini-eventing.js",
   "type": "module",
+  "files": [
+    "lib"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/mini-eventing.js",
+      "require": "./dist/mini-eventing.umd.cjs"
+    }
+  },
   "scripts": {
     "dev": "vite",
-    "build": "rollup -c"
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",

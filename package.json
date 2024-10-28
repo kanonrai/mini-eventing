@@ -1,6 +1,6 @@
 {
   "name": "mini-eventing",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "lib/mini-eventing.js",
   "module": "lib/mini-eventing.js",
@@ -10,8 +10,8 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/mini-eventing.js",
-      "require": "./dist/mini-eventing.umd.cjs"
+      "import": "./lib/mini-eventing.js",
+      "require": "./lib/mini-eventing.umd.cjs"
     }
   },
   "scripts": {

@@ -18,6 +18,7 @@
     "prefer-arrow-callback": "error",
     "no-trailing-spaces": "error",
     "no-duplicate-imports": "error",
+    "@typescript-eslint/consistent-type-imports": "error",
     "comma-dangle": [
       "always"
     ],

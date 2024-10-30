@@ -1,6 +1,6 @@
 import { EventEmitter } from './event-emitter';
 import { EventListener } from './event-listener';
-import {
+import type {
   EventsConfig,
   CreateFlatEventsConfig,
   FlatEventsConfig,

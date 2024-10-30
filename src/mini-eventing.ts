@@ -1,40 +1,56 @@
 import { EventEmitter } from './event-emitter';
 import { EventListener } from './event-listener';
+import {
+  EventsConfig,
+  CreateFlatEventsConfig,
+  FlatEventsConfig,
+  WithoutPayload,
+  StringKey,
+} from './types';
 
-type EventsConfig = {
-  [key: PropertyKey]: any;
-};
-type EventName<T extends EventsConfig> = keyof T extends PropertyKey ? keyof T : never;
-type EventPayload<T extends EventsConfig, K extends EventName<T>> = T[K];
-export class MiniEventing<Events extends EventsConfig> {
+export class MiniEventing<
+  E extends EventsConfig,
+  Events extends FlatEventsConfig = CreateFlatEventsConfig<E>,
+> {
   private static EventEmitter = EventEmitter;
 
-  private eventListeners = {} as {
-    [K in EventName<Events>]?: EventListener<EventPayload<Events, K>>[];
-  };
+  private eventListeners: {
+    [K in StringKey<Events>]?: EventListener<Events[K]['payload']>[];
+  } = {};
+  private eventEmitters: {
+    [K in StringKey<Events>]?: EventEmitter<Events[K]['payload']>;
+  } = {};
 
-  private constructor() {}
-  static create<T extends EventsConfig>() {
-    return new MiniEventing<T>();
+  private constructor(private readonly config: WithoutPayload<Events>) {}
+  static create<T extends EventsConfig>(config: WithoutPayload<CreateFlatEventsConfig<T>>) {
+    return new MiniEventing<T>(config);
   }
 
-  private emitted<T extends EventName<Events>>(eventName: T, payload: EventPayload<Events, T>) {
+  private emitted<T extends StringKey<Events>>(eventName: T, payload: Events[T]['payload']) {
     const listeners = this.eventListeners[eventName] ?? [];
 
     listeners.forEach(listener => listener.listen(payload));
   }
 
-  emitter<T extends EventName<Events>>(eventName: T) {
-    return new MiniEventing.EventEmitter<EventPayload<Events, T>>(eventName, payload =>
+  emitter<T extends StringKey<Events>>(eventName: T) {
+    if (this.eventEmitters[eventName]) throw new Error(`Emitter for ${eventName} already exists`);
+
+    const emitter = new MiniEventing.EventEmitter<Events[T]['payload']>(eventName, payload =>
       this.emitted(eventName, payload)
     );
+
+    this.eventEmitters[eventName] = emitter;
+    return emitter;
   }
 
-  listen<T extends EventName<Events>>(
-    eventName: T,
-    listener: EventListener<EventPayload<Events, T>>
-  ) {
+  listen<T extends StringKey<Events>>(eventName: T, listener: EventListener<Events[T]['payload']>) {
+    const { type } = this.config[eventName];
     const listeners = this.eventListeners[eventName] ?? [];
+
+    if (type === 'command' && listeners.length > 0) {
+      throw new Error(`Only one listener allowed for command ${eventName}`);
+    }
+
     this.eventListeners[eventName] = [...listeners, listener];
   }
 }

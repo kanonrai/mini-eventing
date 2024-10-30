@@ -1,10 +1,10 @@
 export class EventEmitter<PayloadType> {
   constructor(
-    public readonly eventName: PropertyKey,
+    public readonly eventName: string,
     private readonly emitted: (payload: PayloadType) => void
   ) {}
 
-  static create<T>(name: PropertyKey, emitted: (payload: T) => void) {
+  static create<T>(name: string, emitted: (payload: T) => void) {
     return new EventEmitter<T>(name, emitted);
   }
 

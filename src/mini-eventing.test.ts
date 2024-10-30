@@ -3,12 +3,22 @@ import { MiniEventing } from './mini-eventing';
 describe('MiniEventing', () => {
   it('should emit and listen to events', () => {
     const eventing = MiniEventing.create<{
-      foo: string;
-      foo2: number;
-    }>();
+      foo: {
+        type: 'event';
+        payload: string;
+      };
+      foo2: {
+        inner: {
+          type: 'command';
+          payload: number;
+        };
+      };
+    }>({
+      foo: { type: 'event' },
+      'foo2.inner': { type: 'command' },
+    });
     const emitter = eventing.emitter('foo');
-    const emitter2 = eventing.emitter('foo');
-    const emitter3 = eventing.emitter('foo2');
+    const emitter2 = eventing.emitter('foo2.inner');
 
     const listener = jest.fn();
     const listener2 = jest.fn();
@@ -16,11 +26,11 @@ describe('MiniEventing', () => {
 
     eventing.listen('foo', { listen: listener });
     eventing.listen('foo', { listen: listener2 });
-    eventing.listen('foo2', { listen: listener3 });
+    eventing.listen('foo2.inner', { listen: listener3 });
 
     emitter.emit('bar');
-    emitter2.emit('bar');
-    emitter3.emit(1);
+    emitter.emit('baz');
+    emitter2.emit(1);
 
     expect(listener).toHaveBeenCalledWith('bar');
     expect(listener2).toHaveBeenCalledWith('bar');

@@ -1,6 +1,6 @@
 {
   "name": "mini-eventing",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "main": "lib/mini-eventing.js",
   "module": "lib/mini-eventing.js",

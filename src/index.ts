@@ -1,4 +1,4 @@
 import { MiniEventing } from './mini-eventing';
-import type { CreateFlatEventsConfig, EventsConfig } from './types';
+import type { EventsConfig, EventsConfigInput } from './types';
 
-export { MiniEventing, EventsConfig, CreateFlatEventsConfig };
+export { MiniEventing, type EventsConfig, type EventsConfigInput };

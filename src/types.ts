@@ -48,3 +48,5 @@ export type WithoutPayload<T extends FlatEventsConfig> = {
 export type Payload<T extends { payload: any }> = T['payload'];
 
 export type StringKey<T> = keyof T & string;
+
+export type EventsConfigInput<T extends EventsConfig> = WithoutPayload<CreateFlatEventsConfig<T>>;

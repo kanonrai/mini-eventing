@@ -8,7 +8,7 @@
   "files": [
     "lib"
   ],
-  "types": "lib/mini-eventing.d.ts",
+  "types": "lib/index.d.ts",
   "exports": {
     ".": {
       "import": "./lib/mini-eventing.js",

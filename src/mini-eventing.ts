@@ -1,5 +1,6 @@
 import { EventEmitter } from './event-emitter';
-import { EventListener } from './event-listener';
+import { EventListener, EventListenerFn } from './event-listener';
+import { EventRegistry } from './event-orchestrator';
 import type {
   EventsConfig,
   CreateFlatEventsConfig,
@@ -12,45 +13,58 @@ export class MiniEventing<
   E extends EventsConfig,
   Events extends FlatEventsConfig = CreateFlatEventsConfig<E>,
 > {
-  private static EventEmitter = EventEmitter;
+  private registry: EventRegistry<Events>;
 
-  private eventListeners: {
-    [K in StringKey<Events>]?: EventListener<Events[K]['payload']>[];
-  } = {};
-  private eventEmitters: {
-    [K in StringKey<Events>]?: EventEmitter<Events[K]['payload']>;
-  } = {};
+  private handlers: { [K in StringKey<Events>]?: EventListenerFn<Events[K]['payload']>[] } = {};
 
-  private constructor(private readonly config: WithoutPayload<Events>) {}
+  private constructor(private readonly config: WithoutPayload<Events>) {
+    this.registry = EventRegistry.create(config);
+  }
   static create<T extends EventsConfig>(config: WithoutPayload<CreateFlatEventsConfig<T>>) {
     return new MiniEventing<T>(config);
   }
 
-  private emitted<T extends StringKey<Events>>(eventName: T, payload: Events[T]['payload']) {
-    const listeners = this.eventListeners[eventName] ?? [];
-
-    listeners.forEach(listener => listener.listen(payload));
-  }
-
   emitter<T extends StringKey<Events>>(eventName: T) {
-    if (this.eventEmitters[eventName]) throw new Error(`Emitter for ${eventName} already exists`);
-
-    const emitter = new MiniEventing.EventEmitter<Events[T]['payload']>(eventName, payload =>
-      this.emitted(eventName, payload)
-    );
-
-    this.eventEmitters[eventName] = emitter;
+    const type = this.config[eventName].type;
+    const emitter = EventEmitter.create(eventName, payload => this.emitted(eventName, payload));
+    this.registry.addEmitter(eventName, type, emitter);
     return emitter;
   }
 
-  listen<T extends StringKey<Events>>(eventName: T, listener: EventListener<Events[T]['payload']>) {
+  listener<T extends StringKey<Events>>(
+    eventName: T,
+    handler: EventListenerFn<Events[T]['payload']>
+  ) {
     const { type } = this.config[eventName];
-    const listeners = this.eventListeners[eventName] ?? [];
 
-    if (type === 'command' && listeners.length > 0) {
-      throw new Error(`Only one listener allowed for command ${eventName}`);
-    }
+    const listener = EventListener.create(
+      handler,
+      fn => this.listenerFulfilled(eventName, fn),
+      fn => this.registerHandle(eventName, fn)
+    );
 
-    this.eventListeners[eventName] = [...listeners, listener];
+    this.registry.addListener(eventName, type, listener);
+
+    return listener;
+  }
+
+  private listenerFulfilled<T extends StringKey<Events>>(
+    eventName: T,
+    handleFn: EventListenerFn<unknown>
+  ) {
+    const handlers = this.handlers[eventName];
+    handlers?.splice(handlers?.indexOf(handleFn), 1);
+  }
+
+  private registerHandle<T extends StringKey<Events>>(
+    eventName: T,
+    handleFn: EventListenerFn<unknown>
+  ) {
+    this.handlers[eventName] = [...(this.handlers[eventName] ?? []), handleFn];
+  }
+
+  private emitted<T extends StringKey<Events>>(eventName: T, payload: Events[T]['payload']) {
+    const handlers = this.handlers[eventName] ?? [];
+    handlers.forEach(handler => handler(payload));
   }
 }

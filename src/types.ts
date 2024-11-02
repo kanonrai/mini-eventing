@@ -1,7 +1,7 @@
-type EventType = 'command' | 'event';
-interface EventDef {
-  type: EventType;
-  payload: any;
+export type EventType = 'command' | 'event';
+export interface EventDef<Type extends EventType = EventType, T = unknown> {
+  type: Type;
+  payload: T;
 }
 interface ObjectPath {
   path: string;
@@ -24,7 +24,15 @@ type CreateEventsConfig<T extends ObjectPath> = {
 };
 
 export type EventsConfig = {
-  [key: string]: EventDef | EventsConfig;
+  [key: string]:
+    | EventDef
+    | {
+        [key: string]:
+          | EventDef
+          | {
+              [key: string]: EventDef;
+            };
+      };
 };
 export type FlatEventsConfig = {
   [key: string]: EventDef;
@@ -36,5 +44,7 @@ export type WithoutPayload<T extends FlatEventsConfig> = {
     type: T[K]['type'];
   };
 };
+
+export type Payload<T extends { payload: any }> = T['payload'];
 
 export type StringKey<T> = keyof T & string;
